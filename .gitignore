@@ -1,0 +1,7 @@
+__pycache__
+/.python-version
+/.env
+/.idea
+/*.egg*
+/*.pyc
+/dist/
