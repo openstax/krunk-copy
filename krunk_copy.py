@@ -76,6 +76,8 @@ async def poll_query_ptool(server_url: str, col_ids: List) -> None:
                 print('There was a problem with {url}'.format(url=r['url']))
                 continue
 
+        asyncio.sleep(30)
+
 
 def run(server_url: str, col_ids: List) -> None:
     loop = asyncio.get_event_loop()

@@ -4,7 +4,7 @@ requires = ['docopt', 'bs4', 'python-dateutil', 'aiohttp']
 
 setup(
     name='krunk-copy',
-    version='0.0.1',
+    version='0.0.2',
     description='A utility that allows you to download pdfs '
                 'based on collection_ids',
     long_description='',
