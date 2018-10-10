@@ -15,7 +15,7 @@ HOME_PATH = str(Path.home())
 DOWNLOAD_PATH = os.path.join(HOME_PATH, 'Downloads')
 
 
-async def fetch(url: str, ) -> Dict:
+async def aiohttp_get(url: str) -> Dict:
     async with ClientSession() as session:
         async with session.get(url) as response:
             if response.status == 200:
@@ -23,6 +23,19 @@ async def fetch(url: str, ) -> Dict:
                 return {'status': response.status, 'url': url, 'text': text}
             else:
                 return {'status': response.status, 'url': url, 'text': None}
+
+
+async def fetch_query_ptool_page(server_url: str, col_id: str):
+    start_time = datetime.now(timezone.utc)
+
+    url = await build_url(server_url, col_id, 'query_ptool')
+    r = await aiohttp_get(url)
+
+    r['start_time'] = start_time
+    r['server_url'] = server_url
+    r['col_id'] = col_id
+
+    return r
 
 
 async def download_pdf(url: str, filename: str, timestamp: bool = True) -> None:
@@ -43,7 +56,28 @@ async def download_pdf(url: str, filename: str, timestamp: bool = True) -> None:
             return await response.release()
 
 
-async def build_url(base_url: str, col_id: int, endpoint: str) -> str:
+async def download_pdf_when_ready(server_url: str, col_id:str):
+    r = await fetch_query_ptool_page(server_url, col_id)
+    if r['status'] == 200:
+        soup = BeautifulSoup(r['text'], 'html.parser')
+        time_string = soup.findAll('td')[2].string
+        # When we have a time string that means the PDF is available
+        if time_string:
+            time_obj = dateutil.parser.parse(time_string.replace('Universal', 'UTC'))
+            time_diff = r['start_time'] - time_obj
+            print('PDF for col{col_id} is {time} {time_diff} old'.format(
+                col_id=col_id, time=time_obj, time_diff=time_diff))
+            url = await build_url(server_url, col_id, 'pdf')
+            await download_pdf(url, 'col' + col_id)
+        else:
+            await asyncio.sleep(20)
+            await download_pdf_when_ready(server_url, col_id)
+    else:
+        print(f'There was a problem with {server_url} and col_id {col_id}')
+        return 0
+
+
+async def build_url(base_url: str, col_id: str, endpoint: str) -> str:
     return '{base_url}/content/col{col_id}/latest/{endpoint}'.format(
         base_url=base_url,
         col_id=col_id,
@@ -51,42 +85,10 @@ async def build_url(base_url: str, col_id: int, endpoint: str) -> str:
     )
 
 
-async def poll_query_ptool(server_url: str, col_ids: List) -> None:
-    start_time = datetime.now(timezone.utc)
-    print('Polling started at {start_time}'.format(start_time=start_time))
-    while col_ids:
-        for index, col_id in enumerate(col_ids):
-            url = await build_url(server_url, col_id, 'query_ptool')
-            r = await fetch(url)
+async def main(server_url: str, col_ids: List) -> None:
+    futures = [download_pdf_when_ready(server_url, col_id) for col_id in col_ids]
 
-            if r['status'] == 200:
-                soup = BeautifulSoup(r['text'], 'html.parser')
-                time_string = soup.findAll('td')[2].string
-                # When we have a time string that means the PDF is available
-                if time_string:
-                    time_obj = dateutil.parser.parse(time_string.replace('Universal', 'UTC'))
-                    time_diff = start_time - time_obj
-                    print('PDF for col{col_id} completed at {time} {time_diff} ago'.format(
-                        col_id=col_id, time=time_obj, time_diff=time_diff))
-                    url = await build_url(server_url, col_id, 'pdf')
-                    await download_pdf(url, 'col' + col_id)
-                    col_ids.pop(index)
-            else:
-                col_ids.pop(index)
-                print('There was a problem with {url}'.format(url=r['url']))
-                continue
-
-        await asyncio.sleep(30)
-
-
-def run(server_url: str, col_ids: List) -> None:
-    loop = asyncio.get_event_loop()
-    try:
-        loop.run_until_complete(poll_query_ptool(server_url, col_ids))
-    except KeyboardInterrupt:
-        pass
-    finally:
-        loop.close()
+    await asyncio.wait(futures)
 
 
 def cli():
@@ -112,8 +114,11 @@ Note:
     print("Polling and downloading PDF's "
           "for {col_ids} at {server_url}".format(col_ids=col_ids,
                                                  server_url=server_url))
-
-    run(server_url, col_ids)
+    print(f"Started at: {datetime.utcnow()}")
+    try:
+        asyncio.run(main(server_url, col_ids))
+    except KeyboardInterrupt:
+        pass
 
 
 if __name__ == '__main__':
