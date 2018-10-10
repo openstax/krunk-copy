@@ -15,17 +15,17 @@ Command Line
 ============
 
 
-    kcopy --help
-    Krunk Copy: Get krunk with downloading collections from legacy.
+    | kcopy --help
+    | Krunk Copy: Get krunk with downloading collections from legacy.
 
     Usage:
-      kcopy <server_url> <collection_ids>
-      kcopy (-h | --help)
+      | kcopy <server_url> <collection_ids>
+      | kcopy (-h | --help)
 
     Examples:
-      kcopy https://legacy-devb.cnx.org 23566,23455,23456
-      kcopy https://legacy-qa.cnx.org 23678
-      kcopy https://legacy-devb.cnx.org "23456, 34567, 67864"
+      | kcopy https://legacy-devb.cnx.org 23566,23455,23456
+      | kcopy https://legacy-qa.cnx.org 23678
+      | kcopy https://legacy-devb.cnx.org "23456, 34567, 67864"
 
     Note:
       You may need to place quotes around collection ids because of your shell

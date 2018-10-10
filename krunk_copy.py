@@ -8,7 +8,6 @@ import dateutil.parser
 
 from aiohttp import ClientSession
 from bs4 import BeautifulSoup
-
 from docopt import docopt
 
 HOME_PATH = str(Path.home())
@@ -38,6 +37,12 @@ async def fetch_query_ptool_page(server_url: str, col_id: str):
     return r
 
 
+async def make_time_obj(t: str) -> datetime.date:
+    if 'Universal' in t:
+        t = t.replace('Universal', 'UTC')
+    return dateutil.parser.parse(t)
+
+
 async def download_pdf(url: str, filename: str, timestamp: bool = True) -> None:
     if timestamp:
         filename = datetime.now().strftime(filename + '-%Y%m%d-%H%M')
@@ -63,13 +68,13 @@ async def download_pdf_when_ready(server_url: str, col_id:str):
         time_string = soup.findAll('td')[2].string
         # When we have a time string that means the PDF is available
         if time_string:
-            time_obj = dateutil.parser.parse(time_string.replace('Universal', 'UTC'))
+            time_obj = await make_time_obj(time_string)
             time_diff = r['start_time'] - time_obj
-            print('PDF for col{col_id} is {time} {time_diff} old'.format(
-                col_id=col_id, time=time_obj, time_diff=time_diff))
+            print(f'PDF for col{col_id} is {time_diff} old')
             url = await build_url(server_url, col_id, 'pdf')
             await download_pdf(url, 'col' + col_id)
         else:
+            print(f'The pdf is not ready for col{col_id}. Will wait and retry in 20 sec.')
             await asyncio.sleep(20)
             await download_pdf_when_ready(server_url, col_id)
     else:
