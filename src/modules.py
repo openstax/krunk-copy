@@ -2,8 +2,7 @@ import asyncio
 import concurrent.futures
 import os
 import re
-from tempfile import TemporaryDirectory
-from typing import List, Union, Dict
+from typing import List, Dict
 
 from selenium.common.exceptions import NoSuchElementException
 
@@ -152,8 +151,3 @@ def copy_module_to_server(to_server_url: str,
         print(f"uploaded module located at {content_published.current_url}")
     else:
         raise Exception("There was a problem with publishing the module. Review the log.")
-
-
-
-
-
