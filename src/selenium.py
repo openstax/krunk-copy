@@ -3,6 +3,9 @@ from selenium.webdriver.chrome.options import Options
 
 
 def create_chrome_driver(headless=False):
+    """ Instantiates the Chrome webdriver with or without the headless option.
+
+    """
     chrome_options = Options()
     if headless:
         chrome_options.add_argument("--headless")

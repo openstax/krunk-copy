@@ -19,6 +19,16 @@ async def copy_modules(from_server_url: str,
                        headless: str,
                        username: str,
                        password: str) -> None:
+    """The main controller function for copying modules to a server.
+
+    This function combines code that is non-blocking and blocking. First, we
+    create a set of tasks that downloads modules to the local machine; this is
+    all non-blocking asyncio code. The results are gathered for these tasks and
+    are then passed to a set of futures that will run in a
+    `ThreadPoolExecutor`. This is necessary b/c that code is blocking and uses
+    selenium.
+
+    """
     loop = asyncio.get_event_loop()
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=5)
 
@@ -39,6 +49,9 @@ async def copy_modules(from_server_url: str,
 
 
 async def get_module_title(source_url: str, module_id: str):
+    """Gets the module page and uses a regex to extract the title
+
+    """
     module_title_regex = re.compile(r"id=\"cnx_content_title\">(\w.+)<\/")
 
     module_url = await build_url(source_url, module_id, "latest")
@@ -51,6 +64,9 @@ async def get_module_title(source_url: str, module_id: str):
 
 
 async def download_module(source_url: str, module_id: str) -> Dict:
+    """Downloads a module as a zip file to upload to another server.
+
+    """
     print(f"downloading module id {module_id}")
     zip_url = await build_url(source_url, module_id, 'latest/module_export?format=zip')
     filename = os.path.join(module_id + ".zip")
@@ -70,7 +86,30 @@ def copy_module_to_server(to_server_url: str,
                           headless: str,
                           username: str,
                           password: str) -> None:
-    print(f"uploading {zip_path} to {to_server_url}")
+    """Copies a downloaded module zip to a server using the Chrome web browser.
+
+    This function utilizes selenium and the Chrome webdriver to drive the
+    browser as a user and upload a zip file to a CNX Legacy server. The module
+    creation workflow involves a multi-part form that requires specific steps to
+    be completed. The workflow goes as such.
+
+      1. Login to the server.
+      2. Select create a module.
+      3. Accept license agreement. Click Next.
+      4. Fill out some metadata about the module. In this case, only the title.
+         Click Next.
+      5. Select `zip` for module import. Select zip to be uploaded. Click Next.
+      6. View uploaded content. Select Publish.
+      7. Confirm publishing of the module. This step takes the longest.
+
+    The original zip file that is downloaded contains an index.cnxml.html file
+    which will cause errors during publishing. This function also created a
+    fixed version where this file has been removed.
+
+    When this process is complete the url of the completed module is printed to
+    the screen.
+    """
+    print(f"starting the module upload process for {zip_path} to {to_server_url}")
 
     selenium = create_chrome_driver(headless)
 
@@ -93,6 +132,7 @@ def copy_module_to_server(to_server_url: str,
     # Fix the downloaded zip by removing the index.cnxml.html file
     print(f"removing index.cnxml.html file from the downloaded module zip for upload")
     fixed_zip_path = fix_cnx_zip(zip_path)
+    print(f"fixed zip saved at {zip_path}")
 
     # Select zip for import and upload
     print(f"uploading module zip from {fixed_zip_path} to {to_server_url}")

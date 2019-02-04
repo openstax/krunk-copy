@@ -12,7 +12,7 @@ requires = [
 
 setup(
     name='krunk-copy',
-    version='0.1.0',
+    version='0.1.1',
     description='A utility that allows you to download pdfs '
                 'based on collection_ids',
     long_description='',

@@ -49,6 +49,15 @@ async def build_url(base_url: str, item_id: str, endpoint: str) -> str:
 
 
 def fix_cnx_zip(zip_path):
+    """Fixes a downloaded cnx zip file by removing the index.cnxml.html file.
+
+    When a zip is uploaded that contains an index.cnxml.html file it causes an
+    Integrity error during publishing. To avoid this we search the downloaded
+    zip file for the index.cnxml.html file. If one is found we extract the zip
+    into a temporary directory remove the file and create a new zip with
+    `_fixed.zip` appended to it.
+
+    """
     def create_zip(dir_path, archive_path):
         zip = zipfile.ZipFile(archive_path, 'w')
         for root, dirs, files in os.walk(extract_path):
@@ -66,7 +75,7 @@ def fix_cnx_zip(zip_path):
 
     zip = zipfile.ZipFile(zip_path, "r")
 
-    # Find the directory name the zip will extract aas
+    # Find the directory name the zip will extract as
     temp_item = zip.namelist()[0]
     temp_dir_name = temp_item[:temp_item.find('/')]
 
