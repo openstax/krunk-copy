@@ -1,10 +1,18 @@
 from setuptools import setup
 
-requires = ['docopt', 'bs4', 'python-dateutil', 'aiohttp']
+requires = [
+    'docopt',
+    'bs4',
+    'python-dateutil',
+    'aiohttp',
+    'chromedriver-binary',
+    'PyPOM',
+    'selenium'
+]
 
 setup(
     name='krunk-copy',
-    version='0.0.5',
+    version='0.1.0',
     description='A utility that allows you to download pdfs '
                 'based on collection_ids',
     long_description='',
@@ -16,7 +24,7 @@ setup(
     install_requires=requires,
     zip_safe=False,
     entry_points={
-        'console_scripts': ['kcopy=krunk_copy:cli']
+        'console_scripts': ['kcopy=src.cli:cli']
     },
     classifiers=[],
 )
