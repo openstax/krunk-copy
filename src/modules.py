@@ -123,7 +123,7 @@ def copy_module_to_server(to_server_url: str,
     metadata_edit = cc_license.agree().submit()
 
     # Enter the title on the first metadata page. All other fields are left blank
-    print(f"creating module with title '{title}''")
+    print(f"creating module with title '{title}'")
     module_edit = metadata_edit.fill_in_title(title).submit()
     module_temp_url = module_edit.current_url
     print(f"temp module located at {module_temp_url}")

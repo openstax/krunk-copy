@@ -10,7 +10,7 @@ class ConfirmPublish(PrivatePage):
     def publish_form(self):
         return self.find_element(*self._publish_form_locator)
 
-    def submit(self, max_attempts=3):
+    def submit(self, max_attempts=5):
         from src.pages.content_published import ContentPublished
 
         content_published = ContentPublished(self.driver, self.base_url, self.timeout)
@@ -23,6 +23,7 @@ class ConfirmPublish(PrivatePage):
             if not content_published.has_site_error:
                 return content_published
             elif i < max_attempts - 1:
+                print(f"SiteError detected retry number {i}")
                 self.driver.back()
                 self.wait_for_page_to_load()
 
