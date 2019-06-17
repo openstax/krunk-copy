@@ -51,13 +51,13 @@ async def get_module_title(source_url: str, module_id: str):
     """Gets the module page and uses a regex to extract the title
 
     """
-    module_title_regex = re.compile(r"id=\"cnx_content_title\">(\w.+)<\/")
+    module_title_regex = re.compile(r"id=\"cnx_content_title\">(.+)<\/")
 
     module_url = await build_url(source_url, module_id, "latest")
     module_page = await aiohttp_get(module_url)
     module_title = re.search(module_title_regex, module_page["text"]).group(1)
     if module_title:
-        return module_title
+        return module_title.encode('ascii', 'ignore').decode('ascii')
     else:
         raise Exception(f"No title found for {module_id}")
 
@@ -131,7 +131,7 @@ def copy_module_to_server(to_server_url: str,
     # Fix the downloaded zip by removing the index.cnxml.html file
     print(f"removing index.cnxml.html file from the downloaded module zip for upload")
     fixed_zip_path = fix_cnx_zip(zip_path)
-    print(f"fixed zip saved at {zip_path}")
+    print(f"fixed zip saved at {fixed_zip_path}")
 
     # Select zip for import and upload
     print(f"uploading module zip from {fixed_zip_path} to {to_server_url}")
