@@ -5,7 +5,7 @@ requires = [
     'bs4',
     'python-dateutil',
     'aiohttp',
-    'chromedriver-binary',
+    'chromedriver-binary==76.0.3809.126.0',
     'PyPOM',
     'selenium'
 ]
